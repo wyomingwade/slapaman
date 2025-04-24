@@ -44,6 +44,10 @@ pub async fn create_new_server(
     let mut server = Server::new(&name, &directory, &version_string);
     add_server_to_list(&server).unwrap();
 
+    // register the server in the servers.lock file
+    let mut server = Server::new(&name, &directory, &version.to_string());
+    add_server_to_list(&server).unwrap();
+
     // run the server for the first time
     // this will create the eula.txt file and various other files
     run_server(verbose, name.clone(), None, Some(true)).unwrap();
