@@ -1,4 +1,3 @@
-use std::path::PathBuf;
 use std::process::{Command, Stdio};
 
 use crate::memory::memory_value_coerced;
@@ -34,7 +33,7 @@ pub fn run_server(
     }
     
     let server_jar = server_dir.join("server.jar");
-    let memory = memory_value_coerced(memory);
+    let memory = memory.unwrap_or(2048); // use the provided memory or default to 2048
     let run_quietly = runtime_quiet_coerced(quiet);
 
     // run the server

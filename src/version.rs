@@ -37,14 +37,14 @@ impl Version {
     }
 }
 
-#[derive(ValueEnum, Clone, Debug, Eq, PartialEq)]
+#[derive(ValueEnum, Clone, Debug, Eq, PartialEq, Copy)]
 pub enum VersionType {
     Snapshot,
     Release,
 }
 
 // download the servere.jar file for specified version from Mojang's API
-pub async fn download_server_version(version_id: &Version, default_directory: &PathBuf, server_name: &str) -> Result<(), String> {
+pub async fn download_server_version(version_id: &Version, default_directory: &PathBuf, server_name: &str, overwrite_existing: bool) -> Result<(), String> {
     // fetch the manifest of versions from Mojang's API
     let manifest = fetch_manifest().await.unwrap();
 
@@ -56,6 +56,9 @@ pub async fn download_server_version(version_id: &Version, default_directory: &P
 
     // save the server.jar file to {default_directory}/{server_name}/server.jar
     let server_jar_path = default_directory.join(server_name).join("server.jar");
+    if !overwrite_existing && server_jar_path.exists() {
+        return Err(format!("[slapaman] server.jar file already exists: {}", server_jar_path.display()));
+    }
     let mut file = File::create(server_jar_path).unwrap();
     file.write_all(&server_jar_bytes).unwrap();
 
@@ -89,7 +92,6 @@ fn resolve_version(manifest: &Value, version_id: &Version) -> Result<String, Str
             }
         }
         _ => {
-            println!("[slapaman] version: {}", version_id.v_id);
             manifest["versions"].as_array().unwrap().iter().find(|v| v["id"].as_str() == Some(version_id.v_id.as_str())).unwrap().clone()
         }
     };
@@ -128,4 +130,30 @@ async fn download_version_from_url(version_url: &str) -> Result<Vec<u8>, String>
     }
 
     Ok(server_jar_bytes.to_vec())
+}
+
+pub async fn get_latest_version_id(version_type: VersionType) -> Result<String, String> {
+    let manifest = fetch_manifest().await.unwrap();
+    let latest_version_id  = match version_type {
+        VersionType::Snapshot => manifest["latest"]["snapshot"].as_str().unwrap(),
+        VersionType::Release => manifest["latest"]["release"].as_str().unwrap(),
+    };
+
+    Ok(latest_version_id.to_string())
+}
+
+pub async fn format_version_string(version: &Version) -> String {
+    // give the version string proper formatting
+    // e.g. "release-latest" -> "release-1.21.5"
+    let version_type = match version.v_type {
+        VersionType::Release => "release",
+        VersionType::Snapshot => "snapshot",
+    };
+    let version_id = match version.v_id.as_str() {
+        "latest" => get_latest_version_id(version.v_type).await.unwrap(),
+        _ => version.v_id.clone(),
+    };
+    let version_string = format!("{}-{}", version_type, version_id);
+
+    version_string
 }

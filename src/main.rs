@@ -7,8 +7,7 @@ pub mod server;
 pub mod create;
 pub mod remove;
 pub mod run;
-// pub mod list;
-// pub mod update;
+pub mod update;
 pub mod world;
 
 use clap::Parser;
@@ -18,8 +17,10 @@ use args::{Cli, Commands};
 use create::create_new_server;
 use remove::remove_server;
 use run::run_server;
+use update::{update_server, update_all_servers};
 use version::Version;
 use world::set_world;
+use server::{list_servers, rename_server, copy_server, move_server};
 
 #[tokio::main]
 async fn main() {
@@ -35,6 +36,24 @@ async fn main() {
                 Err(e) => println!("[slapaman] error creating server instance: {}", e),
             }
         }
+        Commands::Rename { name, new_name } => {
+            match rename_server(&name, &new_name) {
+                Ok(_) => println!("[slapaman] renamed server instance: {} -> {}", name, new_name),
+                Err(e) => println!("[slapaman] error renaming server instance: {}", e),
+            }
+        }
+        Commands::Copy { name, new_name } => {
+            match copy_server(&name, &new_name) {
+                Ok(_) => println!("[slapaman] copied server instance: {} -> {}", name, new_name),
+                Err(e) => println!("[slapaman] error copying server instance: {}", e),
+            }
+        }
+        Commands::Move { name, new_path } => {
+            match move_server(&name, &new_path) {
+                Ok(_) => println!("[slapaman] moved server instance: {} -> {}", name, new_path.display()),
+                Err(e) => println!("[slapaman] error moving server instance: {}", e),
+            }
+        }
         Commands::Remove { name } => {
             match remove_server(&name) {
                 Ok(_) => println!("[slapaman] removed server instance: {}", name),
@@ -47,8 +66,24 @@ async fn main() {
                 Err(e) => println!("[slapaman] error running server instance: {}", e),
             }
         }
-        Commands::List                => { /* … */ }
-        Commands::Update { name }     => { /* … */ }
+        Commands::List { detailed } => { 
+            match list_servers(detailed) {
+                Ok(_) => println!("[slapaman] successfully listed server instances"),
+                Err(e) => println!("[slapaman] error listing server instances: {}", e),
+            }
+         }
+        Commands::Update { name, version } => { 
+            match update_server(&name, Version::from_string(version)).await {
+                Ok(_) => println!("[slapaman] successfully updated server instance: {}", name),
+                Err(e) => println!("[slapaman] error updating server instance: {}", e),
+            }
+        }
+        Commands::UpdateAll { version } => {
+            match update_all_servers(Version::from_string(version)).await {
+                Ok(_) => println!("[slapaman] successfully updated all server instances"),
+                Err(e) => println!("[slapaman] error updating all server instances: {}", e),
+            }
+        }
         Commands::WorldSet { name, world_path } => {
             match set_world(cli.verbose, name.clone(), &world_path) {
                 Ok(_) => println!("[slapaman] successfully set world for server instance: {}", name),

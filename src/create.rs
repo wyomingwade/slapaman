@@ -4,7 +4,7 @@ use std::io::Write;
 use std::path::PathBuf;
 use directories::ProjectDirs;
 
-use crate::version::{Version, download_server_version};
+use crate::version::{Version, download_server_version, format_version_string};
 use crate::run::run_server;
 use crate::server::{Server, add_server_to_list, update_server_by_name};
 
@@ -37,10 +37,11 @@ pub async fn create_new_server(
     create_dir_all(&server_dir).unwrap();
 
     // download the server version
-    download_server_version(&version, &directory, &name).await.unwrap();
+    download_server_version(&version, &directory, &name, false).await.unwrap();
 
+    let version_string = format_version_string(&version).await;
     // register the server in the servers.lock file
-    let mut server = Server::new(&name, &directory, &version.to_string());
+    let mut server = Server::new(&name, &directory, &version_string);
     add_server_to_list(&server).unwrap();
 
     // run the server for the first time
