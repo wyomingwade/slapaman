@@ -4,10 +4,10 @@ use crate::memory::memory_value_coerced;
 use crate::server::Server;
 
 pub fn run_server(
-    // slapaman params 
+    // slapaman params
     _verbose: u8,
     // command args
-    name: String, 
+    name: String,
     memory: Option<u32>,
     quiet: Option<bool>,
 ) -> Result<(), String> {
@@ -25,13 +25,13 @@ pub fn run_server(
     // make sure the server directory is a directory
     if !server_dir.is_dir() {
         return Err(format!("server instance is not a directory: {}", &name));
-    }   
+    }
 
     // make sure the server directory is a valid server instance
     if !server_dir.join("server.jar").exists() {
         return Err(format!("server instance is not a valid server: {}", &name));
     }
-    
+
     let server_jar = server_dir.join("server.jar");
     let memory = memory.unwrap_or(2048); // use the provided memory or default to 2048
     let run_quietly = runtime_quiet_coerced(quiet);

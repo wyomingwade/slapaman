@@ -2,10 +2,7 @@ use crate::server::{get_all_servers, update_server_by_name, Server};
 use crate::version::{download_server_version, format_version_string, Version};
 
 // basically, replace the server.jar file with a new one while preserving everything else
-pub async fn update_server(
-    name: &String, 
-    version: Version
-) -> Result<(), String> {
+pub async fn update_server(name: &String, version: Version) -> Result<(), String> {
     // load the server
     // this will fail if the server doesn't exist
     let server = Server::load_by_name(&name).unwrap();
@@ -13,11 +10,16 @@ pub async fn update_server(
     // validate the given version
     let version_string = format_version_string(&version).await;
     if version_string == server.version {
-        return Err(format!("server is already on the given version: {}", version_string));
+        return Err(format!(
+            "server is already on the given version: {}",
+            version_string
+        ));
     }
 
     // download the new version
-    download_server_version(&version, &server.path, &server.name, true).await.unwrap();
+    download_server_version(&version, &server.path, &server.name, true)
+        .await
+        .unwrap();
 
     // update the server's version in slapaman's master list
     let mut server_new = server.clone();

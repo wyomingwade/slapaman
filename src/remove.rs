@@ -1,6 +1,6 @@
 use std::fs::remove_dir_all;
 
-use crate::server::{Server, remove_server_from_list};
+use crate::server::{remove_server_from_list, Server};
 
 pub fn remove_server(name: &String) -> Result<(), String> {
     println!("[slapaman] removing server instance: {}", name);

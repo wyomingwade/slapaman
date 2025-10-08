@@ -2,7 +2,7 @@ pub fn memory_value_coerced(memory: Option<u32>) -> u32 {
     // leaving memory blank will default to 2048 MB
     match memory {
         Some(m) => m,
-        None => 2048
+        None => 2048,
     }
 }
 
