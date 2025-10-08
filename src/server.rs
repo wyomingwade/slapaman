@@ -1,11 +1,11 @@
-use std::path::PathBuf;
+use directories::ProjectDirs;
+use fs_extra::copy_items;
 use fs_extra::dir::CopyOptions;
 use serde_json::Value;
+use std::fs;
 use std::fs::File;
 use std::io::{BufReader, BufWriter};
-use directories::ProjectDirs;
-use std::fs;
-use fs_extra::copy_items;
+use std::path::PathBuf;
 
 #[derive(serde_derive::Serialize, serde_derive::Deserialize, Clone)]
 pub struct Server {
@@ -25,21 +25,21 @@ pub struct Server {
 
 impl Server {
     pub fn new(name: &String, path: &PathBuf, version: &String) -> Self {
-        Self { 
-            name: name.clone(), 
-            path: path.clone(), 
-            version: version.clone(), 
-            banned_ips: Value::Null, 
-            banned_players: Value::Null, 
-            eula: false, 
-            whitelist: Value::Null, 
-            ops: Value::Null, 
-            permissions: Value::Null, 
-            server_properties: Value::Null 
+        Self {
+            name: name.clone(),
+            path: path.clone(),
+            version: version.clone(),
+            banned_ips: Value::Null,
+            banned_players: Value::Null,
+            eula: false,
+            whitelist: Value::Null,
+            ops: Value::Null,
+            permissions: Value::Null,
+            server_properties: Value::Null,
         }
     }
 
-    // use this to load a server from slapaman's master list by name 
+    // use this to load a server from slapaman's master list by name
     pub fn load_by_name(name: &String) -> Result<Self, String> {
         // load servers list
         let servers_list = ProjectDirs::from("com", "wyomingwade", "slapaman")
@@ -62,16 +62,20 @@ impl Server {
 }
 
 fn load_servers_list(servers_list: &PathBuf) -> Result<Vec<Server>, String> {
-    let file = File::open(servers_list).map_err(|e| format!("failed to open servers list: {}", e))?;
+    let file =
+        File::open(servers_list).map_err(|e| format!("failed to open servers list: {}", e))?;
     let reader = BufReader::new(file);
-    let servers: Vec<Server> = serde_json::from_reader(reader).map_err(|e| format!("failed to parse servers list: {}", e))?;
+    let servers: Vec<Server> = serde_json::from_reader(reader)
+        .map_err(|e| format!("failed to parse servers list: {}", e))?;
     Ok(servers)
 }
 
 fn save_servers_list(servers_list: &PathBuf, servers: Vec<Server>) -> Result<(), String> {
-    let file = File::create(servers_list).map_err(|e| format!("failed to create servers list: {}", e))?;
+    let file =
+        File::create(servers_list).map_err(|e| format!("failed to create servers list: {}", e))?;
     let writer = BufWriter::new(file);
-    serde_json::to_writer(writer, &servers).map_err(|e| format!("failed to write servers list: {}", e))?;
+    serde_json::to_writer(writer, &servers)
+        .map_err(|e| format!("failed to write servers list: {}", e))?;
     Ok(())
 }
 
@@ -89,11 +93,16 @@ pub fn list_servers(detailed: bool) -> Result<(), String> {
             for server in servers {
                 println!("{}", server.name);
             }
-        },
+        }
         // when running with the --detailed flag, print the server names, paths, and versions
         true => {
             for server in servers {
-                println!("{}: {} ({})", server.name, server.path.display(), server.version);
+                println!(
+                    "{}: {} ({})",
+                    server.name,
+                    server.path.display(),
+                    server.version
+                );
             }
         }
     }
@@ -148,7 +157,8 @@ pub fn rename_server(name: &String, new_name: &String) -> Result<(), String> {
     // attempt to rename the server directory
     let old_path = server_old.path.join(&name).clone();
     let new_path = server_old.path.join(&new_name).clone();
-    fs::rename(&old_path, &new_path).map_err(|e| format!("failed to rename server directory: {}", e))?;
+    fs::rename(&old_path, &new_path)
+        .map_err(|e| format!("failed to rename server directory: {}", e))?;
 
     // update the server's name in slapaman's master list
     let mut server_new = server_old.clone();
@@ -202,10 +212,18 @@ pub fn copy_server(name: &String, new_name: &String) -> Result<(), String> {
     }
 
     // copy the server directory
-    let old_paths = server.path.join(&name).clone().read_dir().unwrap().map(|e| e.unwrap().path()).collect::<Vec<PathBuf>>();
+    let old_paths = server
+        .path
+        .join(&name)
+        .clone()
+        .read_dir()
+        .unwrap()
+        .map(|e| e.unwrap().path())
+        .collect::<Vec<PathBuf>>();
     let new_path = server.path.join(&new_name).clone();
     if !new_path.exists() {
-        fs::create_dir_all(&new_path).map_err(|e| format!("failed to create server directory: {}", e))?;
+        fs::create_dir_all(&new_path)
+            .map_err(|e| format!("failed to create server directory: {}", e))?;
     }
     let options = CopyOptions {
         overwrite: true,
@@ -215,7 +233,8 @@ pub fn copy_server(name: &String, new_name: &String) -> Result<(), String> {
         content_only: false,
         depth: 0,
     };
-    copy_items(&old_paths, &new_path, &options).map_err(|e| format!("failed to copy server directory: {}", e))?;
+    copy_items(&old_paths, &new_path, &options)
+        .map_err(|e| format!("failed to copy server directory: {}", e))?;
 
     // add copied server to slapaman's master list
     let mut servers = load_servers_list(&servers_list).unwrap_or_default();
@@ -237,7 +256,7 @@ pub fn move_server(name: &String, new_path: &PathBuf) -> Result<(), String> {
     // this will load the server from slapaman's master list by name
     // fails when the server is not found
     let server = Server::load_by_name(&name).unwrap();
-    
+
     // make sure the new path is not already taken
     let servers = load_servers_list(&servers_list).unwrap_or_default();
     for server in servers {
@@ -249,7 +268,8 @@ pub fn move_server(name: &String, new_path: &PathBuf) -> Result<(), String> {
     // move the server directory
     let old_path = server.path.join(&name).clone();
     let new_path = new_path.join(&name).clone();
-    fs::rename(&old_path, &new_path).map_err(|e| format!("failed to move server directory: {}", e))?;
+    fs::rename(&old_path, &new_path)
+        .map_err(|e| format!("failed to move server directory: {}", e))?;
 
     // update the server's path in slapaman's master list
     let mut server_new = server.clone();

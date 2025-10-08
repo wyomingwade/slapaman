@@ -4,7 +4,12 @@ use std::path::PathBuf;
 use crate::memory::parse_mem;
 
 #[derive(Parser)]
-#[command(name = "slapaman", author = "Wyoming Wade (github.com/wyomingwade)", version, about = "a command line tool for downloading, managing, and running local Minecraft Java servers")]
+#[command(
+    name = "slapaman",
+    author = "Wyoming Wade (github.com/wyomingwade)",
+    version,
+    about = "a command line tool for downloading, managing, and running local Minecraft Java servers"
+)]
 pub struct Cli {
     /// increase log verbosity (-v, -vv, -vvv)
     #[arg(short, long, action = clap::ArgAction::Count)]
@@ -57,7 +62,7 @@ pub enum Commands {
         name: String,
     },
     /// start an existing instance
-    Run { 
+    Run {
         /// the name of the server instance
         name: String,
         /// the amount of memory to allocate to the server instance (2048M if none is given)
@@ -86,6 +91,21 @@ pub enum Commands {
         /// the version of the server instance
         #[arg(long, default_value = "release-latest")]
         version: String, // this will be converted to a Version struct
+    },
+    /// create a backup of an instance's world
+    WorldBackup {
+        /// the name of the server instance
+        name: String,
+        /// optional tag appended to the backup directory name
+        #[arg(long)]
+        tag: Option<String>,
+    },
+    /// restore an instance's world from a backup
+    WorldRestore {
+        /// the name of the server instance
+        name: String,
+        /// the path or identifier of the backup directory to restore
+        backup: PathBuf,
     },
     /// set the world for an instance to a pre-existing world
     WorldSet {

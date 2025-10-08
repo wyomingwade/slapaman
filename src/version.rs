@@ -1,8 +1,8 @@
 use clap::ValueEnum;
 use serde_json::Value;
-use std::{fs::File, path::PathBuf};
+use sha1::{Digest, Sha1};
 use std::io::Write;
-use sha1::{Sha1, Digest};
+use std::{fs::File, path::PathBuf};
 
 #[derive(Eq, PartialEq, Clone, Debug)]
 pub struct Version {
@@ -44,7 +44,12 @@ pub enum VersionType {
 }
 
 // download the servere.jar file for specified version from Mojang's API
-pub async fn download_server_version(version_id: &Version, default_directory: &PathBuf, server_name: &str, overwrite_existing: bool) -> Result<(), String> {
+pub async fn download_server_version(
+    version_id: &Version,
+    default_directory: &PathBuf,
+    server_name: &str,
+    overwrite_existing: bool,
+) -> Result<(), String> {
     // fetch the manifest of versions from Mojang's API
     let manifest = fetch_manifest().await.unwrap();
 
@@ -57,7 +62,10 @@ pub async fn download_server_version(version_id: &Version, default_directory: &P
     // save the server.jar file to {default_directory}/{server_name}/server.jar
     let server_jar_path = default_directory.join(server_name).join("server.jar");
     if !overwrite_existing && server_jar_path.exists() {
-        return Err(format!("[slapaman] server.jar file already exists: {}", server_jar_path.display()));
+        return Err(format!(
+            "[slapaman] server.jar file already exists: {}",
+            server_jar_path.display()
+        ));
     }
     let mut file = File::create(server_jar_path).unwrap();
     file.write_all(&server_jar_bytes).unwrap();
@@ -85,15 +93,31 @@ fn resolve_version(manifest: &Value, version_id: &Version) -> Result<String, Str
         "latest" => {
             if version_id.v_type == VersionType::Snapshot {
                 let latest_snapshot = manifest["latest"]["snapshot"].as_str().unwrap();
-                manifest["versions"].as_array().unwrap().iter().find(|v| v["id"].as_str() == Some(latest_snapshot)).unwrap().clone()
+                manifest["versions"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .find(|v| v["id"].as_str() == Some(latest_snapshot))
+                    .unwrap()
+                    .clone()
             } else {
                 let latest_release = manifest["latest"]["release"].as_str().unwrap();
-                manifest["versions"].as_array().unwrap().iter().find(|v| v["id"].as_str() == Some(latest_release)).unwrap().clone()
+                manifest["versions"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .find(|v| v["id"].as_str() == Some(latest_release))
+                    .unwrap()
+                    .clone()
             }
         }
-        _ => {
-            manifest["versions"].as_array().unwrap().iter().find(|v| v["id"].as_str() == Some(version_id.v_id.as_str())).unwrap().clone()
-        }
+        _ => manifest["versions"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|v| v["id"].as_str() == Some(version_id.v_id.as_str()))
+            .unwrap()
+            .clone(),
     };
 
     Ok(version["url"].as_str().unwrap().to_string())
@@ -109,24 +133,40 @@ async fn download_version_from_url(version_url: &str) -> Result<Vec<u8>, String>
     let version_json: Value = serde_json::from_str(&body).unwrap();
 
     let server_jar_url = version_json["downloads"]["server"]["url"].as_str().unwrap();
-    let version_size = version_json["downloads"]["server"]["size"].as_u64().unwrap();
-    let version_sha1 = version_json["downloads"]["server"]["sha1"].as_str().unwrap();
+    let version_size = version_json["downloads"]["server"]["size"]
+        .as_u64()
+        .unwrap();
+    let version_sha1 = version_json["downloads"]["server"]["sha1"]
+        .as_str()
+        .unwrap();
 
     // download the version
-    let server_jar_bytes = reqwest::get(server_jar_url).await.unwrap().bytes().await.unwrap();
+    let server_jar_bytes = reqwest::get(server_jar_url)
+        .await
+        .unwrap()
+        .bytes()
+        .await
+        .unwrap();
 
     // verify the size
     if server_jar_bytes.len() != version_size as usize {
-        return Err(format!("[slapaman] size mismatch: {} != {}", server_jar_bytes.len(), version_size));
+        return Err(format!(
+            "[slapaman] size mismatch: {} != {}",
+            server_jar_bytes.len(),
+            version_size
+        ));
     }
-    
+
     // verify the SHA1 hash
     let mut hasher = Sha1::new();
     hasher.update(&server_jar_bytes);
     let computed_hash = format!("{:x}", hasher.finalize());
-    
+
     if computed_hash != version_sha1 {
-        return Err(format!("[slapaman] SHA1 hash mismatch: {} != {}", computed_hash, version_sha1));
+        return Err(format!(
+            "[slapaman] SHA1 hash mismatch: {} != {}",
+            computed_hash, version_sha1
+        ));
     }
 
     Ok(server_jar_bytes.to_vec())
@@ -134,7 +174,7 @@ async fn download_version_from_url(version_url: &str) -> Result<Vec<u8>, String>
 
 pub async fn get_latest_version_id(version_type: VersionType) -> Result<String, String> {
     let manifest = fetch_manifest().await.unwrap();
-    let latest_version_id  = match version_type {
+    let latest_version_id = match version_type {
         VersionType::Snapshot => manifest["latest"]["snapshot"].as_str().unwrap(),
         VersionType::Release => manifest["latest"]["release"].as_str().unwrap(),
     };
