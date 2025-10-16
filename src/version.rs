@@ -8,6 +8,8 @@ use std::io::Write;
 use std::{fs::File, path::PathBuf};
 
 use crate::flavors::fabric::get_fabric_version_bytes;
+use crate::flavors::paper::get_paper_version_bytes;
+use crate::net::http::get_request;
 
 #[derive(Eq, PartialEq, Clone, Debug)]
 pub struct Version {
@@ -68,6 +70,17 @@ pub async fn download_server_version(
             let server_jar_bytes = get_fabric_version_bytes(&version_id, None, None).await.unwrap();
             Ok(server_jar_bytes)
         }
+        "paper" => {
+            if version_id.v_id == "latest" {
+                let latest_release_id = get_latest_release_id().await.unwrap();
+                let version_id_new = Version::new(latest_release_id, version_id.v_type);
+                let server_jar_bytes = get_paper_version_bytes(&version_id_new).await.unwrap();
+                Ok(server_jar_bytes)
+            } else {
+                let server_jar_bytes = get_paper_version_bytes(&version_id).await.unwrap();
+                Ok(server_jar_bytes)
+            }
+        }
         _ => return Err(format!("invalid flavor: {}", flavor)),
     };
     // save the server.jar file to {default_directory}/{server_name}/server.jar
@@ -88,13 +101,20 @@ pub async fn download_server_version(
 async fn fetch_manifest() -> Result<Value, String> {
     // send GET request to Mojang's API
     let url = "https://piston-meta.mojang.com/mc/game/version_manifest.json";
-    let response = reqwest::get(url).await.unwrap();
+    let response = get_request(&url.to_string()).await.unwrap();
     let body = response.text().await.unwrap();
 
     // parse the manifest
     let manifest: Value = serde_json::from_str(&body).unwrap();
 
     Ok(manifest)
+}
+
+// get the latest release ID from the manifest
+async fn get_latest_release_id() -> Result<String, String> {
+    let manifest = fetch_manifest().await.unwrap();
+    let latest_release_id = manifest["latest"]["release"].as_str().unwrap().to_string();
+    Ok(latest_release_id)
 }
 
 // get the relevant version URL from the manifest
@@ -137,7 +157,7 @@ fn resolve_version(manifest: &Value, version_id: &Version) -> Result<String, Str
 // download the version from the URL and verify the size and SHA1 hash
 async fn download_version_from_url(version_url: &str) -> Result<Vec<u8>, String> {
     // send GET request to the version URL
-    let response = match reqwest::get(version_url).await {
+    let response = match get_request(&version_url.to_string()).await {
         Ok(response) => response,
         Err(e) => return Err(format!("failed to send GET request: {}", e)),
     };
@@ -161,7 +181,7 @@ async fn download_version_from_url(version_url: &str) -> Result<Vec<u8>, String>
         .unwrap();
 
     // download the version
-    let server_jar_bytes = reqwest::get(server_jar_url)
+    let server_jar_bytes = get_request(&server_jar_url.to_string())
         .await
         .unwrap()
         .bytes()

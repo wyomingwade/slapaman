@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 Wyoming Wade
 
+use crate::net::http::get_request;
 use crate::version::Version;
 
 const LOADER_VERSION_DEFAULT: &str = "0.17.3";
@@ -40,7 +41,7 @@ fn get_fabric_version_url(
 }
 
 async fn download_fabric_jar(version_url: &String) -> Result<Vec<u8>, String> {
-    let response = match reqwest::get(version_url).await {
+    let response = match get_request(version_url).await {
         Ok(response) => response,
         Err(e) => return Err(format!("failed to send GET request: {}", e)),
     };

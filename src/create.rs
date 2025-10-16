@@ -53,12 +53,11 @@ pub async fn create_new_server(
 
     // run the server for the first time
     // this will create the eula.txt file and various other files
-    let run_result: Result<(), String> = match run_server(verbose, name.clone(), None, Some(true)) {
-        Ok(_) => Ok(()),
+    match run_server(verbose, name.clone(), None, Some(true)) {
+        Ok(_) => (),
         Err(e) => {
             println!("server failed to run: {}", e);
             println!("this is expected since the EULA is not yet agreed to");
-            Ok(())
         }
     };
 

@@ -4,6 +4,7 @@
 use clap::Parser;
 
 pub mod flavors;
+pub mod net;
 
 pub mod args;
 pub mod backup;
