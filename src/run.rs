@@ -3,7 +3,6 @@
 
 use std::process::{Command, Stdio};
 
-use crate::memory::memory_value_coerced;
 use crate::server::Server;
 
 pub fn run_server(
