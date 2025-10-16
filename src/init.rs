@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 Wyoming Wade
+
 use anyhow::{Context, Result};
 use directories::ProjectDirs;
 use regex::Regex;

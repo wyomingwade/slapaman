@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 Wyoming Wade
+
 use directories::ProjectDirs;
 use std::fs::create_dir_all;
 use std::fs::File;

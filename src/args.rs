@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 Wyoming Wade
+
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
@@ -6,7 +9,7 @@ use crate::memory::parse_mem;
 #[derive(Parser)]
 #[command(
     name = "slapaman",
-    author = "Wyoming Wade (github.com/wyomingwade)",
+    author = "Wyoming Wade (GitHub: @wyomingwade)",
     version,
     about = "a command line tool for downloading, managing, and running local Minecraft Java servers"
 )]

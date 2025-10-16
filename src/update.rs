@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 Wyoming Wade
+
 use crate::server::{get_all_servers, update_server_by_name, Server};
 use crate::version::{download_server_version, format_version_string, Version};
 

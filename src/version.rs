@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 Wyoming Wade
+
 use clap::ValueEnum;
 use serde_json::Value;
 use sha1::{Digest, Sha1};
