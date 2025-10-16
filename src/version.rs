@@ -7,6 +7,8 @@ use sha1::{Digest, Sha1};
 use std::io::Write;
 use std::{fs::File, path::PathBuf};
 
+use crate::flavors::fabric::get_fabric_version_bytes;
+
 #[derive(Eq, PartialEq, Clone, Debug)]
 pub struct Version {
     pub v_id: String, // the version ID or "latest"
@@ -46,32 +48,38 @@ pub enum VersionType {
     Release,
 }
 
-// download the servere.jar file for specified version from Mojang's API
+// download the server.jar file for specified version
 pub async fn download_server_version(
     version_id: &Version,
+    flavor: &String,
     default_directory: &PathBuf,
     server_name: &str,
     overwrite_existing: bool,
 ) -> Result<(), String> {
-    // fetch the manifest of versions from Mojang's API
-    let manifest = fetch_manifest().await.unwrap();
-
     // get the relevant version URL from the manifest
-    let version_url = resolve_version(&manifest, version_id).unwrap();
-
-    // download the server.jar file for this version
-    let server_jar_bytes = download_version_from_url(&version_url).await.unwrap();
-
+    let server_jar_bytes: Result<Vec<u8>, String> = match flavor.as_str() {
+        "vanilla" => {
+            let manifest = fetch_manifest().await.unwrap();
+            let version_url = resolve_version(&manifest, version_id).unwrap();
+            let server_jar_bytes = download_version_from_url(&version_url).await.unwrap();
+            Ok(server_jar_bytes)
+        }
+        "fabric" => {
+            let server_jar_bytes = get_fabric_version_bytes(&version_id, None, None).await.unwrap();
+            Ok(server_jar_bytes)
+        }
+        _ => return Err(format!("invalid flavor: {}", flavor)),
+    };
     // save the server.jar file to {default_directory}/{server_name}/server.jar
     let server_jar_path = default_directory.join(server_name).join("server.jar");
     if !overwrite_existing && server_jar_path.exists() {
         return Err(format!(
-            "[slapaman] server.jar file already exists: {}",
+            "server.jar file already exists: {}",
             server_jar_path.display()
         ));
     }
     let mut file = File::create(server_jar_path).unwrap();
-    file.write_all(&server_jar_bytes).unwrap();
+    file.write_all(&server_jar_bytes.unwrap().to_vec()).unwrap();
 
     Ok(())
 }
@@ -129,11 +137,20 @@ fn resolve_version(manifest: &Value, version_id: &Version) -> Result<String, Str
 // download the version from the URL and verify the size and SHA1 hash
 async fn download_version_from_url(version_url: &str) -> Result<Vec<u8>, String> {
     // send GET request to the version URL
-    let response = reqwest::get(version_url).await.unwrap();
-    let body = response.text().await.unwrap();
+    let response = match reqwest::get(version_url).await {
+        Ok(response) => response,
+        Err(e) => return Err(format!("failed to send GET request: {}", e)),
+    };
+    let body = match response.text().await {
+        Ok(body) => body,
+        Err(e) => return Err(format!("failed to read response body: {}", e)),
+    };
 
     // parse the version
-    let version_json: Value = serde_json::from_str(&body).unwrap();
+    let version_json: Value = match serde_json::from_str(&body) {
+        Ok(json) => json,
+        Err(e) => return Err(format!("failed to parse version JSON: {}", e)),
+    };
 
     let server_jar_url = version_json["downloads"]["server"]["url"].as_str().unwrap();
     let version_size = version_json["downloads"]["server"]["size"]

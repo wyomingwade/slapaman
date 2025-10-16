@@ -20,7 +20,7 @@ pub async fn update_server(name: &String, version: Version) -> Result<(), String
     }
 
     // download the new version
-    download_server_version(&version, &server.path, &server.name, true)
+    download_server_version(&version, &server.flavor, &server.path, &server.name, true)
         .await
         .unwrap();
 

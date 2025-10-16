@@ -34,6 +34,9 @@ pub enum Commands {
         /// the version of the server instance
         #[arg(long, default_value = "release-latest")]
         version: String, // this will be converted to a Version struct
+        /// the flavor of the server instance (vanilla, forge, fabric, etc.)
+        #[arg(long, default_value = "vanilla")]
+        flavor: String,
         /// don't automatically accept the EULA upon first launch
         #[arg(long, default_value = "false")]
         ignore_eula: bool,

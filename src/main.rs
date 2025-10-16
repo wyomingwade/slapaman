@@ -1,20 +1,21 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025 Wyoming Wade
 
-pub mod args;
-pub mod init;
-pub mod memory;
-pub mod server;
-pub mod version;
+use clap::Parser;
 
+pub mod flavors;
+
+pub mod args;
 pub mod backup;
 pub mod create;
+pub mod init;
+pub mod memory;
 pub mod remove;
 pub mod run;
+pub mod server;
 pub mod update;
+pub mod version;
 pub mod world;
-
-use clap::Parser;
 
 use args::{Cli, Commands};
 use backup::{create_world_backup, restore_world_backup};
@@ -39,6 +40,7 @@ async fn main() {
             name,
             path,
             version,
+            flavor,
             ignore_eula,
         } => {
             match create_new_server(
@@ -46,6 +48,7 @@ async fn main() {
                 path,
                 name.clone(),
                 Version::from_string(version),
+                flavor.clone(),
                 ignore_eula,
             )
             .await
