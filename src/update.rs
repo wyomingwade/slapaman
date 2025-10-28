@@ -41,11 +41,11 @@ pub async fn update_server(
     Ok(())
 }
 
-pub async fn update_all_servers(version: Version) -> Result<(), String> {
+pub async fn update_all_servers(version: Version, flavor: Option<String>) -> Result<(), String> {
     let servers = get_all_servers().unwrap();
     for server in servers {
         // if an individual server update fails, note that, but continue updating the rest
-        if update_server(&server.name, version.clone(), None)
+        if update_server(&server.name, version.clone(), flavor.clone())
             .await
             .is_err()
         {

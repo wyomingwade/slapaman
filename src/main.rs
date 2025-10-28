@@ -93,7 +93,7 @@ async fn main() {
             Err(e) => println!("[slapaman] error running server instance: {}", e),
         },
         Commands::List { detailed } => match list_servers(detailed) {
-            Ok(_) => println!("[slapaman] successfully listed server instances"),
+            Ok(_) => (),
             Err(e) => println!("[slapaman] error listing server instances: {}", e),
         },
         Commands::Update {
@@ -104,8 +104,8 @@ async fn main() {
             Ok(_) => println!("[slapaman] successfully updated server instance: {}", name),
             Err(e) => println!("[slapaman] error updating server instance: {}", e),
         },
-        Commands::UpdateAll { version } => {
-            match update_all_servers(Version::from_string(version)).await {
+        Commands::UpdateAll { version, flavor } => {
+            match update_all_servers(Version::from_string(version), flavor).await {
                 Ok(_) => println!("[slapaman] successfully updated all server instances"),
                 Err(e) => println!("[slapaman] error updating all server instances: {}", e),
             }
@@ -137,6 +137,33 @@ async fn main() {
                 ),
                 Err(e) => println!("[slapaman] error setting world for server instance: {}", e),
             }
+        }
+        Commands::OverworldBackup { name, tag} => {
+            println!("[slapaman] not implemented");
+        }
+        Commands::OverworldRestore { name, backup } => {
+            println!("[slapaman] not implemented");
+        }
+        Commands::OverworldSet { name, overworld_path } => {
+            println!("[slapaman] not implemented");
+        }
+        Commands::NetherBackup { name, tag } => {
+            println!("[slapaman] not implemented");
+        }
+        Commands::NetherRestore { name, backup } => {
+            println!("[slapaman] not implemented");
+        }
+        Commands::NetherSet { name, nether_path } => {
+            println!("[slapaman] not implemented");
+        }
+        Commands::EndBackup { name, tag } => {
+            println!("[slapaman] not implemented");
+        }
+        Commands::EndRestore { name, backup } => {
+            println!("[slapaman] not implemented");
+        }
+        Commands::EndSet { name, end_path } => {
+            println!("[slapaman] not implemented");
         }
     }
 }
