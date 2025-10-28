@@ -12,7 +12,11 @@ pub async fn get_fabric_version_bytes(
     fabric_loader_version: Option<&String>,
     fabric_installer_version: Option<&String>,
 ) -> Result<Vec<u8>, String> {
-    let version_url = get_fabric_version_url(game_version_id, fabric_loader_version, fabric_installer_version)?;
+    let version_url = get_fabric_version_url(
+        game_version_id,
+        fabric_loader_version,
+        fabric_installer_version,
+    )?;
     let bytes = download_fabric_jar(&version_url).await?;
     Ok(bytes)
 }
@@ -33,9 +37,7 @@ fn get_fabric_version_url(
 
     let url = format!(
         "https://meta.fabricmc.net/v2/versions/loader/{}/{}/{}/server/jar",
-        &game_version_id.v_id,
-        loader_version,
-        installer_version
+        &game_version_id.v_id, loader_version, installer_version
     );
     Ok(url)
 }
@@ -47,7 +49,7 @@ async fn download_fabric_jar(version_url: &String) -> Result<Vec<u8>, String> {
     };
     let body = match response.bytes().await {
         Ok(body) => body,
-        Err(e) => return Err(format!("failed to read response body: {}", e))
+        Err(e) => return Err(format!("failed to read response body: {}", e)),
     };
 
     Ok(body.to_vec())

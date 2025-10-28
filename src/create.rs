@@ -9,7 +9,7 @@ use std::path::PathBuf;
 
 use crate::run::run_server;
 use crate::server::{add_server_to_list, does_server_exist, update_server_by_name, Server};
-use crate::version::{Version, download_server_version, format_version_string};
+use crate::version::{download_server_version, format_version_string, Version};
 
 pub async fn create_new_server(
     // slapaman params

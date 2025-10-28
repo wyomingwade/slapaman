@@ -91,6 +91,9 @@ pub enum Commands {
         /// the version of the server instance
         #[arg(long, default_value = "release-latest")]
         version: String, // this will be converted to a Version struct
+        /// the flavor of the server instance (omit to keep current)
+        #[arg(long)]
+        flavor: Option<String>,
     },
     /// update all instances to a new version
     UpdateAll {

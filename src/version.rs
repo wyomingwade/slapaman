@@ -67,7 +67,9 @@ pub async fn download_server_version(
             Ok(server_jar_bytes)
         }
         "fabric" => {
-            let server_jar_bytes = get_fabric_version_bytes(&version_id, None, None).await.unwrap();
+            let server_jar_bytes = get_fabric_version_bytes(&version_id, None, None)
+                .await
+                .unwrap();
             Ok(server_jar_bytes)
         }
         "paper" => {

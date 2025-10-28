@@ -96,12 +96,14 @@ async fn main() {
             Ok(_) => println!("[slapaman] successfully listed server instances"),
             Err(e) => println!("[slapaman] error listing server instances: {}", e),
         },
-        Commands::Update { name, version } => {
-            match update_server(&name, Version::from_string(version)).await {
-                Ok(_) => println!("[slapaman] successfully updated server instance: {}", name),
-                Err(e) => println!("[slapaman] error updating server instance: {}", e),
-            }
-        }
+        Commands::Update {
+            name,
+            version,
+            flavor,
+        } => match update_server(&name, Version::from_string(version), flavor).await {
+            Ok(_) => println!("[slapaman] successfully updated server instance: {}", name),
+            Err(e) => println!("[slapaman] error updating server instance: {}", e),
+        },
         Commands::UpdateAll { version } => {
             match update_all_servers(Version::from_string(version)).await {
                 Ok(_) => println!("[slapaman] successfully updated all server instances"),
