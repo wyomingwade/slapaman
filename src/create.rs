@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 Wyoming Wade
+
 use directories::ProjectDirs;
 use std::fs::create_dir_all;
 use std::fs::File;
@@ -5,7 +8,7 @@ use std::io::Write;
 use std::path::PathBuf;
 
 use crate::run::run_server;
-use crate::server::{add_server_to_list, update_server_by_name, Server};
+use crate::server::{add_server_to_list, does_server_exist, update_server_by_name, Server};
 use crate::version::{download_server_version, format_version_string, Version};
 
 pub async fn create_new_server(
@@ -15,6 +18,7 @@ pub async fn create_new_server(
     path: Option<PathBuf>,
     name: String,
     version: Version,
+    flavor: String,
     ignore_eula: bool,
 ) -> Result<(), String> {
     println!("[slapaman] creating new server instance: {}", name);
@@ -29,7 +33,7 @@ pub async fn create_new_server(
     let server_dir = directory.join(&name);
 
     // make sure the server directory doesn't already exist
-    if server_dir.exists() {
+    if does_server_exist(&name) {
         return Err(format!("server instance already exists: {}", &name));
     }
 
@@ -37,22 +41,25 @@ pub async fn create_new_server(
     create_dir_all(&server_dir).unwrap();
 
     // download the server version
-    download_server_version(&version, &directory, &name, false)
+    download_server_version(&version, &flavor, &directory, &name, false)
         .await
         .unwrap();
 
     let version_string = format_version_string(&version).await;
-    // register the server in the servers.lock file
-    let mut server = Server::new(&name, &directory, &version_string);
-    add_server_to_list(&server).unwrap();
 
     // register the server in the servers.lock file
-    let mut server = Server::new(&name, &directory, &version.to_string());
+    let mut server = Server::new(&name, &directory, &version_string, &flavor);
     add_server_to_list(&server).unwrap();
 
     // run the server for the first time
     // this will create the eula.txt file and various other files
-    run_server(verbose, name.clone(), None, Some(true)).unwrap();
+    match run_server(verbose, name.clone(), None, Some(true)) {
+        Ok(_) => (),
+        Err(e) => {
+            println!("server failed to run: {}", e);
+            println!("this is expected since the EULA is not yet agreed to");
+        }
+    };
 
     // agree to the eula if the user didn't specify to ignore it
     if !ignore_eula {

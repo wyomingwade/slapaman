@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 Wyoming Wade
+
 use std::fs::remove_dir_all;
 
 use crate::server::{remove_server_from_list, Server};

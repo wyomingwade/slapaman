@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 Wyoming Wade
+
 use fs_extra::{copy_items, dir::CopyOptions};
 use std::fs;
 use std::path::PathBuf;
@@ -7,7 +10,7 @@ use crate::server::Server;
 // set the world for a server instance to a pre-existing world
 pub fn set_world(
     // slapaman params
-    verbose: u8,
+    _verbose: u8,
     // command args
     name: String,
     world_path: &PathBuf,

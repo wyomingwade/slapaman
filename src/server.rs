@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 Wyoming Wade
+
 use directories::ProjectDirs;
 use fs_extra::copy_items;
 use fs_extra::dir::CopyOptions;
@@ -13,6 +16,7 @@ pub struct Server {
     pub name: String,
     pub path: PathBuf,
     pub version: String,
+    pub flavor: String,
     // can be configured after creation
     pub banned_ips: Value,
     pub banned_players: Value,
@@ -24,11 +28,12 @@ pub struct Server {
 }
 
 impl Server {
-    pub fn new(name: &String, path: &PathBuf, version: &String) -> Self {
+    pub fn new(name: &String, path: &PathBuf, version: &String, flavor: &String) -> Self {
         Self {
             name: name.clone(),
             path: path.clone(),
             version: version.clone(),
+            flavor: flavor.clone(),
             banned_ips: Value::Null,
             banned_players: Value::Null,
             eula: false,
@@ -287,4 +292,14 @@ pub fn get_all_servers() -> Result<Vec<Server>, String> {
 
     let servers = load_servers_list(&servers_list).unwrap_or_default();
     Ok(servers)
+}
+
+pub fn does_server_exist(name: &String) -> bool {
+    let servers = get_all_servers().unwrap();
+    for server in servers {
+        if server.name == *name {
+            return true;
+        }
+    }
+    false
 }

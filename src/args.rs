@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 Wyoming Wade
+
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
@@ -6,7 +9,7 @@ use crate::memory::parse_mem;
 #[derive(Parser)]
 #[command(
     name = "slapaman",
-    author = "Wyoming Wade (github.com/wyomingwade)",
+    author = "Wyoming Wade (GitHub: @wyomingwade)",
     version,
     about = "a command line tool for downloading, managing, and running local Minecraft Java servers"
 )]
@@ -31,6 +34,9 @@ pub enum Commands {
         /// the version of the server instance
         #[arg(long, default_value = "release-latest")]
         version: String, // this will be converted to a Version struct
+        /// the flavor of the server instance (vanilla, forge, fabric, etc.)
+        #[arg(long, default_value = "vanilla")]
+        flavor: String,
         /// don't automatically accept the EULA upon first launch
         #[arg(long, default_value = "false")]
         ignore_eula: bool,
@@ -85,6 +91,9 @@ pub enum Commands {
         /// the version of the server instance
         #[arg(long, default_value = "release-latest")]
         version: String, // this will be converted to a Version struct
+        /// the flavor of the server instance (omit to keep current)
+        #[arg(long)]
+        flavor: Option<String>,
     },
     /// update all instances to a new version
     UpdateAll {

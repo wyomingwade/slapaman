@@ -1,6 +1,8 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 Wyoming Wade
+
 use std::process::{Command, Stdio};
 
-use crate::memory::memory_value_coerced;
 use crate::server::Server;
 
 pub fn run_server(

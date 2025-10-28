@@ -1,17 +1,22 @@
-pub mod args;
-pub mod init;
-pub mod memory;
-pub mod server;
-pub mod version;
-
-pub mod backup;
-pub mod create;
-pub mod remove;
-pub mod run;
-pub mod update;
-pub mod world;
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025 Wyoming Wade
 
 use clap::Parser;
+
+pub mod flavors;
+pub mod net;
+
+pub mod args;
+pub mod backup;
+pub mod create;
+pub mod init;
+pub mod memory;
+pub mod remove;
+pub mod run;
+pub mod server;
+pub mod update;
+pub mod version;
+pub mod world;
 
 use args::{Cli, Commands};
 use backup::{create_world_backup, restore_world_backup};
@@ -36,6 +41,7 @@ async fn main() {
             name,
             path,
             version,
+            flavor,
             ignore_eula,
         } => {
             match create_new_server(
@@ -43,6 +49,7 @@ async fn main() {
                 path,
                 name.clone(),
                 Version::from_string(version),
+                flavor.clone(),
                 ignore_eula,
             )
             .await
@@ -89,12 +96,14 @@ async fn main() {
             Ok(_) => println!("[slapaman] successfully listed server instances"),
             Err(e) => println!("[slapaman] error listing server instances: {}", e),
         },
-        Commands::Update { name, version } => {
-            match update_server(&name, Version::from_string(version)).await {
-                Ok(_) => println!("[slapaman] successfully updated server instance: {}", name),
-                Err(e) => println!("[slapaman] error updating server instance: {}", e),
-            }
-        }
+        Commands::Update {
+            name,
+            version,
+            flavor,
+        } => match update_server(&name, Version::from_string(version), flavor).await {
+            Ok(_) => println!("[slapaman] successfully updated server instance: {}", name),
+            Err(e) => println!("[slapaman] error updating server instance: {}", e),
+        },
         Commands::UpdateAll { version } => {
             match update_all_servers(Version::from_string(version)).await {
                 Ok(_) => println!("[slapaman] successfully updated all server instances"),
