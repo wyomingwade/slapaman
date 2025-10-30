@@ -303,3 +303,9 @@ pub fn does_server_exist(name: &String) -> bool {
     }
     false
 }
+
+pub fn load_server(name: &String, path: &PathBuf, version: &String, flavor: &String) -> Result<(), String> {
+    let server = Server::new(name, path, version, flavor);
+    add_server_to_list(&server).unwrap();
+    Ok(())
+}

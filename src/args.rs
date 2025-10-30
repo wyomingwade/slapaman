@@ -41,6 +41,17 @@ pub enum Commands {
         #[arg(long, short, default_value = "false")]
         ignore_eula: bool,
     },
+    /// load an existing server instance
+    Load {
+        /// the name of the server instance to load
+        name: String,
+        /// the path to the server instance to load
+        path: PathBuf,
+        /// the version of the server instance to load
+        version: String,
+        /// the flavor of the server instance to load
+        flavor: String,
+    },
     /// rename an existing instance
     Rename {
         /// the current name of the server instance

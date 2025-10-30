@@ -24,7 +24,7 @@ use create::create_new_server;
 use init::slapaman_init;
 use remove::remove_server;
 use run::run_server;
-use server::{copy_server, list_servers, move_server, rename_server};
+use server::{copy_server, list_servers, load_server, move_server, rename_server};
 use update::{update_all_servers, update_server};
 use version::Version;
 use world::set_world;
@@ -58,6 +58,10 @@ async fn main() {
                 Err(e) => println!("[slapaman] error creating server instance: {}", e),
             }
         }
+        Commands::Load { name, path, version, flavor } => match load_server(&name, &path, &version, &flavor) {
+            Ok(_) => println!("[slapaman] loaded server instance: {}", name),
+            Err(e) => println!("[slapaman] error loading server instance: {}", e),
+        },
         Commands::Rename { name, new_name } => match rename_server(&name, &new_name) {
             Ok(_) => println!(
                 "[slapaman] renamed server instance: {} -> {}",
