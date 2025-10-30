@@ -4,27 +4,27 @@
 use directories::ProjectDirs;
 use fs_extra::copy_items;
 use fs_extra::dir::CopyOptions;
-use serde_json::Value;
+use serde_derive::{Deserialize, Serialize};
+use toml;
 use std::fs;
 use std::fs::File;
-use std::io::{BufReader, BufWriter};
+use std::io::{BufRead, BufReader, BufWriter, Write};
 use std::path::PathBuf;
 
-#[derive(serde_derive::Serialize, serde_derive::Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
+pub struct ServersLockfile {
+    pub version: u8, // the version of the servers lockfile format
+    pub last_modified: String, // the last time the servers lockfile was modified
+    pub servers: Vec<Server>, // the list of servers
+}
+
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Server {
     // stuff that must be known upon creation
     pub name: String,
     pub path: PathBuf,
     pub version: String,
     pub flavor: String,
-    // can be configured after creation
-    pub banned_ips: Value,
-    pub banned_players: Value,
-    pub eula: bool,
-    pub whitelist: Value,
-    pub ops: Value,
-    pub permissions: Value,
-    pub server_properties: Value,
 }
 
 impl Server {
@@ -34,13 +34,6 @@ impl Server {
             path: path.clone(),
             version: version.clone(),
             flavor: flavor.clone(),
-            banned_ips: Value::Null,
-            banned_players: Value::Null,
-            eula: false,
-            whitelist: Value::Null,
-            ops: Value::Null,
-            permissions: Value::Null,
-            server_properties: Value::Null,
         }
     }
 
@@ -70,17 +63,24 @@ fn load_servers_list(servers_list: &PathBuf) -> Result<Vec<Server>, String> {
     let file =
         File::open(servers_list).map_err(|e| format!("failed to open servers list: {}", e))?;
     let reader = BufReader::new(file);
-    let servers: Vec<Server> = serde_json::from_reader(reader)
-        .map_err(|e| format!("failed to parse servers list: {}", e))?;
-    Ok(servers)
+    
+    let lines = reader.lines().collect::<Result<Vec<String>, std::io::Error>>().unwrap();
+    let servers_lockfile: ServersLockfile = toml::from_str(&lines.join("\n")).map_err(|e| format!("failed to parse servers list: {}", e))?;
+    Ok(servers_lockfile.servers)
 }
 
 fn save_servers_list(servers_list: &PathBuf, servers: Vec<Server>) -> Result<(), String> {
-    let file =
-        File::create(servers_list).map_err(|e| format!("failed to create servers list: {}", e))?;
-    let writer = BufWriter::new(file);
-    serde_json::to_writer(writer, &servers)
-        .map_err(|e| format!("failed to write servers list: {}", e))?;
+    let mut writer = BufWriter::new(
+        File::create(servers_list).map_err(|e| format!("failed to create servers list: {}", e))?
+    );
+    let toml = toml::to_string(&ServersLockfile {
+        version: 1,
+        last_modified: chrono::Utc::now().to_string(),
+        servers: servers,
+    })
+        .map_err(|e| format!("failed to parse servers list to toml: {}", e))?;
+    writer.write_all(&toml.as_bytes())
+        .map_err(|e| format!("failed to write servers list to file: {}", e))?;
     Ok(())
 }
 
@@ -293,7 +293,6 @@ pub fn get_all_servers() -> Result<Vec<Server>, String> {
     let servers = load_servers_list(&servers_list).unwrap_or_default();
     Ok(servers)
 }
-
 pub fn does_server_exist(name: &String) -> bool {
     let servers = get_all_servers().unwrap();
     for server in servers {

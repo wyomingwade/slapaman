@@ -48,7 +48,7 @@ pub async fn create_new_server(
     let version_string = format_version_string(&version).await;
 
     // register the server in the servers.lock file
-    let mut server = Server::new(&name, &directory, &version_string, &flavor);
+    let server = Server::new(&name, &directory, &version_string, &flavor);
     add_server_to_list(&server).unwrap();
 
     // run the server for the first time
@@ -64,7 +64,6 @@ pub async fn create_new_server(
     // agree to the eula if the user didn't specify to ignore it
     if !ignore_eula {
         agree_to_eula(&server_dir).unwrap();
-        server.eula = true;
         update_server_by_name(&name, &server).unwrap();
         println!("[slapaman] eula agreed to");
     }
